@@ -8,7 +8,7 @@ import time
 import fluidsynth
 
 # Load SoundFont
-SF2_PATH = "../sounds/FluidR3_GM.sf2"
+SF2_PATH = "./sounds/FluidR3_GM.sf2"
 
 # 🎹 Piano Synth
 piano = fluidsynth.Synth()

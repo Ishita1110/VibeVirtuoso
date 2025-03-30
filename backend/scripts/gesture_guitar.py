@@ -8,7 +8,7 @@ import time
 from guitar_synth import GuitarSynth
 
 # Initialize Synth
-guitar = GuitarSynth("../sounds/FluidR3_GM.sf2")
+guitar = GuitarSynth("./sounds/FluidR3_GM.sf2")
 
 # 📷 MediaPipe setup
 cap = cv2.VideoCapture(0)

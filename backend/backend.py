@@ -4,6 +4,9 @@ from datetime import datetime
 from dotenv import load_dotenv
 from db.mongo import recordings
 from scripts.gesture_control import handle_gesture
+import subprocess
+import os
+import signal
 
 load_dotenv()
 
@@ -32,10 +35,6 @@ def get_recordings():
     return {
         "recordings": list(recordings.find({}, {"_id": 0}))
     }
-
-import subprocess
-import os
-import signal
 
 # Store the process globally
 gesture_process = None

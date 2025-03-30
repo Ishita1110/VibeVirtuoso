@@ -9,7 +9,7 @@ import fluidsynth
 # 🎼 Init FluidSynth for MIDI Drums
 fs = fluidsynth.Synth()
 fs.start(driver="coreaudio")
-sfid = fs.sfload("../sounds/FluidR3_GM.sf2")
+sfid = fs.sfload("./sounds/FluidR3_GM.sf2")
 fs.program_select(9, sfid, 128, 0)  # Channel 9 = Drum Kit
 
 # Drum mapping
