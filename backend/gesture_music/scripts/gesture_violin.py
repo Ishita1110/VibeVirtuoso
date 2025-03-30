@@ -4,10 +4,10 @@ os.environ["SDL_AUDIODRIVER"] = "coreaudio"
 import cv2
 import mediapipe as mp
 import time
-from sax_synth import SaxSynth  # <- Create this like FluteSynth
+from violin_synth import ViolinSynth  # <- Create this like FluteSynth
 
-# --- Sax Synth Init ---
-sax = SaxSynth("../sounds/FluidR3_GM.sf2")  # Make sure this file is in the correct path
+# --- Violin Synth Init ---
+violin = ViolinSynth("../sounds/FluidR3_GM.sf2")  # Make sure this file is in the correct path
 
 # --- MediaPipe Setup ---
 cap = cv2.VideoCapture(0)
@@ -19,16 +19,16 @@ mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(min_detection_confidence=0.7, max_num_hands=1)
 mp_draw = mp.solutions.drawing_utils
 
-cv2.namedWindow("Sax Mode", cv2.WINDOW_NORMAL)
+cv2.namedWindow("Violin Mode", cv2.WINDOW_NORMAL)
 cv2.startWindowThread()
 
-# --- Note Mapping (Lower register for Tenor Sax feel) ---
+# --- Note Mapping (Violin Range: A3 to G5) ---
 NOTE_BASE = {
     1: 57,  # A3
     2: 60,  # C4
-    3: 62,  # D4
-    4: 64,  # E4
-    5: 67   # G4
+    3: 64,  # E4
+    4: 67,  # G4
+    5: 79   # G5
 }
 
 last_note_played = -1
@@ -66,7 +66,7 @@ while running:
             hand_y = wrist_y
             finger_count = count_extended_fingers(hand_landmarks)
 
-    # Sax logic
+    # Violin logic
     if hand_y is not None and finger_count in NOTE_BASE:
         base_note = NOTE_BASE[finger_count]
 
@@ -79,22 +79,22 @@ while running:
             midi_note = base_note       # Mid
 
         if finger_count != last_note_played:
-            print(f"🎷 Sax MIDI Note: {midi_note}")
-            sax.play_note(midi_note, velocity=127)
+            print(f"🎻 Violin MIDI Note: {midi_note}")
+            violin.play_note(midi_note, velocity=127)
             last_note_played = finger_count
 
     else:
-        sax.stop()
+        violin.stop()
         last_note_played = -1
 
-    cv2.putText(frame, "Mode: Saxophone (Tenor)", (10, 30),
+    cv2.putText(frame, "Mode: Violin", (10, 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-    cv2.imshow("Sax Mode", frame)
+    cv2.imshow("Violin Mode", frame)
 
     if cv2.waitKey(1) & 0xFF == 27:
         running = False
 
 # Cleanup
-sax.delete()
+violin.delete()
 cap.release()
 cv2.destroyAllWindows()
