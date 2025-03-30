@@ -1,7 +1,7 @@
 import fluidsynth
 
 class GuitarSynth:
-    def __init__(self, sf2_path="FluidR3_GM.sf2", program=25):  # Steel acoustic
+    def __init__(self, sf2_path="./sounds/FluidR3_GM.sf2", program=25):  # Steel acoustic
         self.fs = fluidsynth.Synth()
         self.fs.start(driver="coreaudio")
         self.sfid = self.fs.sfload(sf2_path)

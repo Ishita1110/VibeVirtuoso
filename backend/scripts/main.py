@@ -6,42 +6,134 @@ import time
 import os
 import signal
 import subprocess
+import uuid
+import random
+from datetime import datetime
+from pymongo import MongoClient
+from dotenv import load_dotenv
+load_dotenv()
 
-# Map voice commands to corresponding instrument files
 instrument_scripts = {
-    "flute": "gesture_flute.py",
-    "drums": "gesture_drums.py",
-    "guitar": "gesture_guitar.py",
-    "piano": "gesture_piano.py",
-    "saxophone": "gesture_sax_player.py",
-    "violin": "gesture_violin.py"
+    "flute": os.path.join("scripts", "gesture_flute.py"),
+    "drums": os.path.join("scripts", "gesture_drums.py"),
+    "guitar": os.path.join("scripts", "gesture_guitar.py"),
+    "piano": os.path.join("scripts", "gesture_piano.py"),
+    "saxophone": os.path.join("scripts", "gesture_sax_player.py"),
+    "violin": os.path.join("scripts", "gesture_violin.py"),
 }
 
-# OpenCV + MediaPipe setup
 cap = cv2.VideoCapture(0)
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(min_detection_confidence=0.7, max_num_hands=2)
 mp_draw = mp.solutions.drawing_utils
 
-# Global state
+client = MongoClient(os.getenv("MONGO_URI"))
+recordings = client["vibevirtuoso"]["recordings"]
+
+session_id = str(uuid.uuid4())
 current_instrument = None
 current_process = None
+recording_process = None
+recording_file = None
+recording_start = None
 last_finger_count = -1
+gemini_mode = "create"
+gemini_response = ""
 
 def initialize_camera():
     if not cap.isOpened():
         print("❌ Webcam not found")
         exit()
 
+def start_recording(instrument):
+    global recording_process, recording_file, recording_start
+
+    filename = f"{instrument}_{uuid.uuid4().hex}.wav"
+    filepath = os.path.join("recordings", filename)
+    recording_file = filepath
+    recording_start = datetime.utcnow()
+
+    recording_process = subprocess.Popen([
+        "python", "scripts/record_audio.py", filepath
+    ])
+    print(f"🔴 Started recording {instrument} to {filepath}")
+
+def stop_recording(instrument):
+    global recording_process, recording_file, recording_start
+
+    if recording_process:
+        recording_process.terminate()
+        recording_process.wait()
+
+        recordings.insert_one({
+            "session_id": session_id,
+            "instrument": instrument,
+            "file_path": recording_file,
+            "started_at": recording_start.isoformat(),
+            "ended_at": datetime.utcnow().isoformat()
+        })
+        print(f"🛑 Stopped recording {instrument} and saved to MongoDB")
+        recording_process = None
+
 def listen_for_command():
+    global gemini_mode, gemini_response
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        print("🎙️ Say an instrument name (e.g., 'flute', 'drums', 'exit')")
+        print("🎙️ Say an instrument name or command (e.g., 'flute', 'guide me', 'exit')")
         try:
             audio = recognizer.listen(source, timeout=5)
             command = recognizer.recognize_google(audio).lower()
             print(f"🗣️ Heard: {command}")
+
+            if "enter teach mode" in command:
+                gemini_mode = "teach"
+                gemini_response = "📘 Gemini is now in TEACHING mode."
+                print(gemini_response)
+                return None
+            elif "enter create mode" in command:
+                gemini_mode = "create"
+                gemini_response = "🎨 Gemini is now in CREATION mode."
+                print(gemini_response)
+                return None
+            elif "guide me" in command or "gemini" in command:
+                suggestions = {
+                    "flute": [
+                        "🎵 Try starting with C Major and sliding into E minor.",
+                        "🎶 Use long sustained notes on D and A for emotional build-up."
+                    ],
+                    "drums": [
+                        "🥁 Begin with a 4/4 kick-snare pattern, and throw in triplets on the hi-hat!",
+                        "🔥 Layer kick on beats 1 and 3, snare on 2 and 4 — classic groove!"
+                    ],
+                    "guitar": [
+                        "🎸 Try an arpeggio of C – G – Am – F for a chill vibe.",
+                        "🎶 Use palm muting on the E string while alternating with G chord plucks."
+                    ],
+                    "piano": [
+                        "🎹 Try a progression like F – Am – Dm – Bb in a broken chord pattern.",
+                        "🎼 Left hand plays root, right hand plays 7th chords — jazzy!"
+                    ],
+                    "saxophone": [
+                        "🎷 Glide through notes B♭ – C – D with vibrato on the end note.",
+                        "🎶 Improvise on the blues scale in G for a classic feel."
+                    ],
+                    "violin": [
+                        "🎻 Use staccato bowing on G – B – D for a bouncing effect.",
+                        "🎼 Try legato transitions between A – E – F♯ for a smooth phrase."
+                    ]
+                }
+
+                if current_instrument in suggestions:
+                    response = random.choice(suggestions[current_instrument])
+                else:
+                    response = "🎧 Explore creative combinations of rhythm and melody!"
+
+                print("🧠 Gemini says:\n", response)
+                gemini_response = f"Instrument: {current_instrument.capitalize()}\n{response}"
+                return None
+
             return command
+
         except sr.UnknownValueError:
             print("❓ Could not understand audio.")
         except sr.RequestError:
@@ -61,12 +153,20 @@ def stop_current_instrument():
         current_process = None
 
 def switch_instrument(instrument_name):
-    global current_process
+    global current_process, current_instrument
+
     if instrument_name not in instrument_scripts:
         print("❌ Invalid instrument name.")
         return
+
+    if current_instrument:
+        stop_recording(current_instrument)
     stop_current_instrument()
+
     print(f"🎼 Switching to {instrument_name}")
+    start_recording(instrument_name)
+    current_instrument = instrument_name
+
     try:
         current_process = subprocess.Popen(
             ["python", f"./{instrument_scripts[instrument_name]}"],
@@ -79,6 +179,7 @@ def listen_for_instrument_changes():
     while True:
         command = listen_for_command()
         if command == "exit":
+            stop_recording(current_instrument)
             stop_current_instrument()
             print("👋 Exiting...")
             break
@@ -91,18 +192,31 @@ def process_gestures():
         success, img = cap.read()
         if not success:
             continue
-        img = cv2.flip(img, 1)  # 🔁 Flip image to fix mirror effect
+        img = cv2.flip(img, 1)
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         result = hands.process(img_rgb)
         if result.multi_hand_landmarks:
             for hand_landmarks in result.multi_hand_landmarks:
                 mp_draw.draw_landmarks(img, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+
+        if gemini_response:
+            y0 = 30
+            for i, line in enumerate(gemini_response.split('\n')):
+                y = y0 + i * 30
+                cv2.putText(img, line, (10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+        if current_instrument:
+            cv2.putText(
+                img, f"🎹 Instrument: {current_instrument.upper()}",
+                (10, img.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2
+            )
+
         cv2.imshow("Gesture Controller", img)
-        if cv2.waitKey(1) & 0xFF == 27:  # ESC to quit
+        if cv2.waitKey(1) & 0xFF == 27:
             break
+
     cap.release()
     cv2.destroyAllWindows()
-
 
 def main():
     initialize_camera()

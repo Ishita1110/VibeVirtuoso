@@ -1,4 +1,4 @@
-// File: /Users/pradhyumnsinghthakur/Documents/GitHub/Finger-Bangers/app/layout.tsx
+// File: /Users/saatvikpradhan/Documents/GitHub/Finger-Bangers/app/layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

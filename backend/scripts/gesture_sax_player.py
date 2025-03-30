@@ -9,7 +9,7 @@ import time
 from sax_synth import SaxSynth  # <- Create this like FluteSynth
 
 # --- Sax Synth Init ---
-sax = SaxSynth("../sounds/FluidR3_GM.sf2")  # Make sure this file is in the correct path
+sax = SaxSynth("./sounds/FluidR3_GM.sf2")  # Make sure this file is in the correct path
 
 # --- MediaPipe Setup ---
 cap = cv2.VideoCapture(0)

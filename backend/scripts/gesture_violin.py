@@ -8,7 +8,7 @@ import time
 from violin_synth import ViolinSynth  # <- Create this like FluteSynth
 
 # --- Violin Synth Init ---
-violin = ViolinSynth("../sounds/FluidR3_GM.sf2")  # Make sure this file is in the correct path
+violin = ViolinSynth("./sounds/FluidR3_GM.sf2")  # Make sure this file is in the correct path
 
 # --- MediaPipe Setup ---
 cap = cv2.VideoCapture(0)
