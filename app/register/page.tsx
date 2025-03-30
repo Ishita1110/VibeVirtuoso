@@ -77,7 +77,7 @@ export default function RegisterPage() {
               Home
             </Link>
             <Link href="/music" className="text-sm font-medium hover:text-purple-200 transition-colors">
-              Music
+              Explore
             </Link>
             <Link href="/signin" className="text-sm font-medium hover:text-purple-200 transition-colors">
               Sign In
@@ -191,7 +191,7 @@ export default function RegisterPage() {
                 Home
               </Link>
               <Link href="/music" className="text-sm hover:text-white">
-                Music
+                Explore
               </Link>
               <Link href="/signin" className="text-sm hover:text-white">
                 Sign In

@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AudioWaveformIcon as Waveform, Moon, Sun } from "lucide-react"
+import { handleLogin } from "@/lib/auth"
 
 export default function SignInPage() {
   const router = useRouter()
@@ -47,8 +48,8 @@ export default function SignInPage() {
       // In a real app, you would validate credentials here
       setIsLoading(false)
 
-      // Redirect to home page
-      router.push("/")
+      // Use the handleLogin function to set auth state and redirect
+      handleLogin(router)
     }, 1000)
   }
 
@@ -66,7 +67,7 @@ export default function SignInPage() {
               Home
             </Link>
             <Link href="/music" className="text-sm font-medium hover:text-purple-200 transition-colors">
-              Music
+              Explore
             </Link>
             <Link href="/signin" className="text-sm font-medium text-purple-200 border-b-2 border-purple-200">
               Sign In
@@ -160,7 +161,7 @@ export default function SignInPage() {
                 Home
               </Link>
               <Link href="/music" className="text-sm hover:text-white">
-                Music
+                Explore
               </Link>
               <Link href="/signin" className="text-sm hover:text-white">
                 Sign In

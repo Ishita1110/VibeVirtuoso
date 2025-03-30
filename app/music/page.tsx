@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
@@ -15,9 +16,21 @@ import {
   VolumeX,
   Moon,
   Sun,
+  Home,
+  LogIn,
 } from "lucide-react"
+import { getAuthState, clearAuthState } from "@/lib/auth"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown, User, LogOut } from "lucide-react"
 
 export default function MusicPage() {
+  const router = useRouter()
   const [currentTrack, setCurrentTrack] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [volume, setVolume] = useState(80)
@@ -45,6 +58,11 @@ export default function MusicPage() {
     document.documentElement.classList.toggle("dark")
   }
 
+  const handleLogout = () => {
+    clearAuthState()
+    router.push("/")
+  }
+
   // Sample tracks data
   const tracks = [
     { id: 1, title: "Electronic Fusion", artist: "DJ Codewave", duration: "3:45", genre: "Electronic" },
@@ -70,8 +88,6 @@ export default function MusicPage() {
 
     ctx.scale(dpr, dpr)
 
-    let phase = 0
-
     const drawSmoothWaves = () => {
       ctx.clearRect(0, 0, rect.width, rect.height)
 
@@ -90,10 +106,6 @@ export default function MusicPage() {
       ctx.strokeStyle = isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
       ctx.stroke()
 
-      // Draw the primary smooth wave (top)
-      ctx.beginPath()
-      ctx.moveTo(0, centerY)
-
       // Parameters for wave complexity
       const frequency1 = 0.02
       const frequency2 = 0.01
@@ -106,11 +118,21 @@ export default function MusicPage() {
       // Add more complexity when playing
       const playingMultiplier = isPlaying ? 1.5 : 1
 
+      // Use requestAnimationFrame timestamp for smoother animation
+      const now = Date.now() / 1000
+      const animationSpeed = isPlaying ? 2.0 : 0.5
+      const animationPhase = now * animationSpeed
+
+      // Draw the primary smooth wave (top)
+      ctx.beginPath()
+      ctx.moveTo(0, centerY)
+
       for (let x = 0; x <= rect.width; x += 1) {
         // Combine multiple sine waves for a more interesting but still smooth pattern
-        const y1 = Math.sin(x * frequency1 + phase) * amplitude1 * playingMultiplier
-        const y2 = Math.sin(x * frequency2 + phase * 0.7) * amplitude2 * playingMultiplier
-        const y3 = Math.sin(x * frequency3 + phase * 1.3) * amplitude3 * playingMultiplier
+        // Use animationPhase for smoother animation
+        const y1 = Math.sin(x * frequency1 + animationPhase) * amplitude1 * playingMultiplier
+        const y2 = Math.sin(x * frequency2 + animationPhase * 0.7) * amplitude2 * playingMultiplier
+        const y3 = Math.sin(x * frequency3 + animationPhase * 1.3) * amplitude3 * playingMultiplier
 
         const y = centerY - (y1 + y2 + y3) // Negative to go above center line
 
@@ -127,9 +149,9 @@ export default function MusicPage() {
 
       for (let x = 0; x <= rect.width; x += 1) {
         // Same waves but inverted to go below center line
-        const y1 = Math.sin(x * frequency1 + phase) * amplitude1 * playingMultiplier
-        const y2 = Math.sin(x * frequency2 + phase * 0.7) * amplitude2 * playingMultiplier
-        const y3 = Math.sin(x * frequency3 + phase * 1.3) * amplitude3 * playingMultiplier
+        const y1 = Math.sin(x * frequency1 + animationPhase) * amplitude1 * playingMultiplier
+        const y2 = Math.sin(x * frequency2 + animationPhase * 0.7) * amplitude2 * playingMultiplier
+        const y3 = Math.sin(x * frequency3 + animationPhase * 1.3) * amplitude3 * playingMultiplier
 
         const y = centerY + (y1 + y2 + y3) // Positive to go below center line
 
@@ -140,19 +162,7 @@ export default function MusicPage() {
       ctx.lineWidth = 3
       ctx.stroke()
 
-      // Draw playhead line if playing
-      if (isPlaying) {
-        ctx.strokeStyle = "#ef4444" // red-500
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        const playheadX = rect.width * (progress / 100)
-        ctx.moveTo(playheadX, 0)
-        ctx.lineTo(playheadX, rect.height)
-        ctx.stroke()
-      }
-
-      // Update phase for animation
-      phase += isPlaying ? 0.05 : 0.02
+      // Continue the animation loop
       animationRef.current = requestAnimationFrame(drawSmoothWaves)
     }
 
@@ -165,12 +175,19 @@ export default function MusicPage() {
     }
   }, [isPlaying, progress, isDarkMode])
 
-  // Simulate progress when playing
+  // Simulate progress when playing - using requestAnimationFrame for smoother updates
   useEffect(() => {
-    let interval: NodeJS.Timeout
+    let lastTime = 0
+    let animationFrameId: number
 
-    if (isPlaying) {
-      interval = setInterval(() => {
+    const updateProgress = (timestamp: number) => {
+      if (!lastTime) lastTime = timestamp
+
+      // Calculate time elapsed since last frame
+      const elapsed = timestamp - lastTime
+
+      // Update progress based on elapsed time (smoother than fixed increments)
+      if (isPlaying) {
         setProgress((prev) => {
           if (prev >= 100) {
             // Move to next track when current one finishes
@@ -182,12 +199,27 @@ export default function MusicPage() {
               return 0
             }
           }
-          return prev + 0.5
+          // Calculate smooth increment based on elapsed time
+          // 3 minutes (180 seconds) should take 100% progress
+          // So we increment by elapsed/1000 * (100/180) percent
+          return prev + (elapsed / 1000) * (100 / 180)
         })
-      }, 100)
+      }
+
+      lastTime = timestamp
+      animationFrameId = requestAnimationFrame(updateProgress)
     }
 
-    return () => clearInterval(interval)
+    if (isPlaying) {
+      lastTime = 0
+      animationFrameId = requestAnimationFrame(updateProgress)
+    }
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
+    }
   }, [isPlaying, currentTrack, tracks.length])
 
   const togglePlay = () => setIsPlaying(!isPlaying)
@@ -229,11 +261,46 @@ export default function MusicPage() {
               Home
             </Link>
             <Link href="/music" className="text-sm font-medium text-purple-200 border-b-2 border-purple-200">
-              Music
+              Explore
             </Link>
-            <Link href="/signin" className="text-sm font-medium hover:text-purple-200 transition-colors">
-              Sign In
-            </Link>
+            {getAuthState() ? (
+              <>
+                <Link href="/dashboard" className="text-sm font-medium hover:text-purple-200 transition-colors">
+                  Dashboard
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-1 hover:bg-white/10">
+                      Alex Johnson
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="flex items-center justify-start gap-2 p-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-700">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="flex flex-col space-y-0.5">
+                        <p className="text-sm font-medium">Alex Johnson</p>
+                        <p className="text-xs text-muted-foreground">alex@example.com</p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push("/dashboard")}>Dashboard</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push("/create")}>Create New Composition</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <Link href="/signin" className="text-sm font-medium hover:text-purple-200 transition-colors">
+                Sign In
+              </Link>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -336,6 +403,22 @@ export default function MusicPage() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-center gap-4 mt-8">
+              <Link href="/">
+                <Button className="bg-white text-purple-700 hover:bg-purple-100 flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  Go to Home
+                </Button>
+              </Link>
+              <Link href="/signin">
+                <Button className="bg-white text-purple-700 hover:bg-purple-100 flex items-center gap-2">
+                  <LogIn className="h-4 w-4" />
+                  Go to Sign In
+                </Button>
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -410,7 +493,7 @@ export default function MusicPage() {
                 Home
               </Link>
               <Link href="/music" className="text-sm hover:text-white">
-                Music
+                Explore
               </Link>
               <Link href="/signin" className="text-sm hover:text-white">
                 Sign In
