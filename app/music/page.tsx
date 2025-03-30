@@ -19,7 +19,15 @@ import {
   Home,
   LogIn,
 } from "lucide-react"
-import { clearAuthState } from "@/lib/auth"
+import { getAuthState, clearAuthState } from "@/lib/auth"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown, User, LogOut } from "lucide-react"
 
 export default function MusicPage() {
   const router = useRouter()
@@ -52,7 +60,7 @@ export default function MusicPage() {
 
   const handleLogout = () => {
     clearAuthState()
-    router.push("/signin")
+    router.push("/")
   }
 
   // Sample tracks data
@@ -255,9 +263,44 @@ export default function MusicPage() {
             <Link href="/music" className="text-sm font-medium text-purple-200 border-b-2 border-purple-200">
               Explore
             </Link>
-            <Link href="/signin" className="text-sm font-medium hover:text-purple-200 transition-colors">
-              Sign In
-            </Link>
+            {getAuthState() ? (
+              <>
+                <Link href="/dashboard" className="text-sm font-medium hover:text-purple-200 transition-colors">
+                  Dashboard
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-1 hover:bg-white/10">
+                      Alex Johnson
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="flex items-center justify-start gap-2 p-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-700">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="flex flex-col space-y-0.5">
+                        <p className="text-sm font-medium">Alex Johnson</p>
+                        <p className="text-xs text-muted-foreground">alex@example.com</p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push("/dashboard")}>Dashboard</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push("/create")}>Create New Composition</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <Link href="/signin" className="text-sm font-medium hover:text-purple-200 transition-colors">
+                Sign In
+              </Link>
+            )}
             <Button
               variant="ghost"
               size="icon"

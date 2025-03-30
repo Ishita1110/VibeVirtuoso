@@ -4,18 +4,27 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { AudioWaveformIcon as Waveform, Moon, Sun, Music, Play } from "lucide-react"
-import { getAuthState } from "@/lib/auth"
-
-// Mock authentication check - in a real app, this would check your auth state
-const isAuthenticated = () => {
-  return getAuthState()
-}
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { AudioWaveformIcon as Waveform, Moon, Sun, Music, Play, LogOut, ChevronDown, User } from "lucide-react"
+import { getAuthState, clearAuthState } from "@/lib/auth"
 
 export default function LandingPage() {
   const router = useRouter()
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // Mock user data
+  const mockUser = {
+    name: "Alex Johnson",
+    email: "alex@example.com",
+  }
 
   // Initialize dark mode based on user preference
   useEffect(() => {
@@ -27,17 +36,13 @@ export default function LandingPage() {
     }
   }, [])
 
-  // Check authentication and redirect if needed
+  // Check authentication status but don't redirect
   useEffect(() => {
-    // Simulate checking auth status
-    setTimeout(() => {
-      if (isAuthenticated()) {
-        router.push("/dashboard")
-      } else {
-        setLoading(false)
-      }
-    }, 500)
-  }, [router])
+    // Check auth status directly without setTimeout
+    const authStatus = getAuthState()
+    setIsAuthenticated(authStatus)
+    setLoading(false)
+  }, [])
 
   // Toggle dark mode
   const toggleDarkMode = () => {
@@ -45,6 +50,13 @@ export default function LandingPage() {
     if (typeof document !== "undefined") {
       document.documentElement.classList.toggle("dark")
     }
+  }
+
+  // Handle logout
+  const handleLogout = () => {
+    clearAuthState()
+    setIsAuthenticated(false)
+    router.push("/")
   }
 
   if (loading) {
@@ -74,9 +86,44 @@ export default function LandingPage() {
             <Link href="/music" className="text-sm font-medium hover:text-purple-200 transition-colors">
               Explore
             </Link>
-            <Link href="/signin" className="text-sm font-medium hover:text-purple-200 transition-colors">
-              Sign In
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link href="/dashboard" className="text-sm font-medium hover:text-purple-200 transition-colors">
+                  Dashboard
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-1 hover:bg-white/10">
+                      {mockUser.name}
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="flex items-center justify-start gap-2 p-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-700">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="flex flex-col space-y-0.5">
+                        <p className="text-sm font-medium">{mockUser.name}</p>
+                        <p className="text-xs text-muted-foreground">{mockUser.email}</p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push("/dashboard")}>Dashboard</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push("/create")}>Create New Composition</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <Link href="/signin" className="text-sm font-medium hover:text-purple-200 transition-colors">
+                Sign In
+              </Link>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -103,7 +150,9 @@ export default function LandingPage() {
                   SoundCraft: Interactive Music Creation
                 </h1>
                 <p className="mx-auto max-w-[700px] text-xl md:text-2xl text-white/80">
-                  Create, visualize, and share music through an intuitive interface with real-time audio visualization.
+                  {isAuthenticated
+                    ? "Continue your musical journey with our intuitive tools and real-time visualization."
+                    : "Create, visualize, and share music through an intuitive interface with real-time audio visualization."}
                 </p>
               </div>
 
@@ -111,9 +160,9 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   className="bg-white text-purple-700 hover:bg-purple-100 px-8 text-lg font-bold"
-                  onClick={() => router.push("/signin")}
+                  onClick={() => router.push(isAuthenticated ? "/dashboard" : "/signin")}
                 >
-                  Start Making Music
+                  {isAuthenticated ? "Go to Dashboard" : "Start Making Music"}
                 </Button>
               </div>
             </div>
@@ -170,17 +219,21 @@ export default function LandingPage() {
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-r from-fuchsia-600 via-purple-600 to-indigo-600 text-white">
           <div className="container px-4 md:px-6 mx-auto text-center">
             <div className="max-w-3xl mx-auto space-y-8">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Ready to Make Some Music?</h2>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+                {isAuthenticated ? "Ready to Continue Your Music?" : "Ready to Make Some Music?"}
+              </h2>
               <p className="mx-auto max-w-[700px] text-xl text-white/80">
-                Jump right in and start creating your own musical masterpieces with SoundCraft.
+                {isAuthenticated
+                  ? "Jump back into your projects or start something new with SoundCraft."
+                  : "Jump right in and start creating your own musical masterpieces with SoundCraft."}
               </p>
               <div>
                 <Button
                   size="lg"
                   className="bg-white text-purple-700 hover:bg-purple-100 px-8 text-lg font-bold"
-                  onClick={() => router.push("/signin")}
+                  onClick={() => router.push(isAuthenticated ? "/dashboard" : "/signin")}
                 >
-                  Sign In to Get Started
+                  {isAuthenticated ? "Go to Dashboard" : "Sign In to Get Started"}
                 </Button>
               </div>
               <p className="text-sm text-white/70">No musical experience required. Just bring your creativity!</p>
@@ -204,9 +257,15 @@ export default function LandingPage() {
               <Link href="/music" className="text-sm hover:text-white">
                 Explore
               </Link>
-              <Link href="/signin" className="text-sm hover:text-white">
-                Sign In
-              </Link>
+              {isAuthenticated ? (
+                <Link href="/dashboard" className="text-sm hover:text-white">
+                  Dashboard
+                </Link>
+              ) : (
+                <Link href="/signin" className="text-sm hover:text-white">
+                  Sign In
+                </Link>
+              )}
               <Link href="#" className="text-sm hover:text-white">
                 Contact
               </Link>

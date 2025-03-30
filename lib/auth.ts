@@ -39,3 +39,28 @@ export const clearAuthState = () => {
   }
 }
 
+// Add a function to handle login that redirects to home
+export const handleLogin = (router: any) => {
+  setAuthState(true)
+  router.push("/")
+}
+
+// Add a function to handle logout that redirects to home
+export const handleLogout = (router: any) => {
+  clearAuthState()
+  router.push("/")
+}
+
+// Add a new function to check auth state without redirecting
+export const checkAuthState = () => {
+  if (!isBrowser) return false
+
+  try {
+    const authState = localStorage.getItem("soundcraft_auth")
+    return authState === "true"
+  } catch (error) {
+    console.error("Error reading auth state:", error)
+    return false
+  }
+}
+

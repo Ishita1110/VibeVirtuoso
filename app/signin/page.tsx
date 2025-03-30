@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AudioWaveformIcon as Waveform, Moon, Sun } from "lucide-react"
-import { setAuthState } from "@/lib/auth"
+import { handleLogin } from "@/lib/auth"
 
 export default function SignInPage() {
   const router = useRouter()
@@ -48,11 +48,8 @@ export default function SignInPage() {
       // In a real app, you would validate credentials here
       setIsLoading(false)
 
-      // Set auth state to true
-      setAuthState(true)
-
-      // Redirect to dashboard page after successful login
-      router.push("/dashboard")
+      // Use the handleLogin function to set auth state and redirect
+      handleLogin(router)
     }, 1000)
   }
 

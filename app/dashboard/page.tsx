@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   AudioWaveformIcon as Waveform,
   Moon,
   Sun,
@@ -17,6 +24,9 @@ import {
   Trash2,
   Music,
   Loader2,
+  ChevronDown,
+  User,
+  LogOut,
 } from "lucide-react"
 import { format } from "date-fns"
 import {
@@ -30,6 +40,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+// Import the handleLogout function
 import { getAuthState, clearAuthState } from "@/lib/auth"
 
 // Mock user data - in a real app, this would come from your authentication system
@@ -133,7 +144,9 @@ export default function DashboardPage() {
 
   // Check if user is authenticated
   useEffect(() => {
-    if (!getAuthState()) {
+    // Only redirect if explicitly not authenticated
+    const authState = getAuthState()
+    if (authState === false) {
       router.push("/signin")
     }
   }, [router])
@@ -165,9 +178,10 @@ export default function DashboardPage() {
     setDeleteDialogOpen(false)
   }
 
+  // Handle logout
   const handleLogout = () => {
     clearAuthState()
-    router.push("/signin")
+    router.push("/")
   }
 
   return (
@@ -189,13 +203,33 @@ export default function DashboardPage() {
             <Link href="/music" className="text-sm font-medium hover:text-purple-200 transition-colors">
               Explore
             </Link>
-            <Button
-              variant="ghost"
-              className="text-sm font-medium text-white hover:text-purple-200 transition-colors"
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-1 hover:bg-white/10">
+                  {mockUser.name}
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-700">
+                    <User className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex flex-col space-y-0.5">
+                    <p className="text-sm font-medium">{mockUser.name}</p>
+                    <p className="text-xs text-muted-foreground">{mockUser.email}</p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push("/dashboard")}>Dashboard</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/create")}>Create New Composition</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               variant="ghost"
               size="icon"
