@@ -144,7 +144,8 @@ while True:
             last_piano_note = None
         stop_synth()
         last_synth_fingers = -1
-
+cv2.destroyAllWindows()
+exit(0)
     # # UI
     # cv2.putText(frame, "Right: Piano 🎹 | Left: Strings 🎻", (10, 30),
     #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)

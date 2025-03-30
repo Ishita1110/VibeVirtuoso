@@ -79,7 +79,8 @@ while running:
     else:
         flute.stop()
         last_note_played = -1
-
+cv2.destroyAllWindows()
+exit(0)
     # # UI
     # cv2.putText(frame, "Mode: Flute (High Octave)", (10, 30),
     #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
