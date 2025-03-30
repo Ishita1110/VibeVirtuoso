@@ -1,5 +1,5 @@
 "use client"
-
+import { startInstrument } from "@/lib/startInstrument";
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -265,11 +265,17 @@ export default function DashboardPage() {
           </div>
           <Button
             className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
-            onClick={() => router.push("/editor")}
+            onClick={async () => {
+              const result = await startInstrument()
+              console.log(result)
+              alert("🎶 Gesture system started! Check your webcam!");
+            }}
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Composition
+            <Play className="h-4 w-4 mr-2" />
+            Begin Making Music
           </Button>
+
+
         </div>
 
         {/* Creations Grid */}

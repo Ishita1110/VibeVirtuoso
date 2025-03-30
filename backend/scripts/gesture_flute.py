@@ -7,7 +7,7 @@ import time
 from flute_synth import FluteSynth  # Make sure this file is in the same folder
 
 # 🎵 Initialize Flute Synth
-flute = FluteSynth("../sounds/FluidR3_GM.sf2")  # adjust path if needed
+flute = FluteSynth("./sounds/FluidR3_GM.sf2")  # adjust path if needed
 
 # 🎥 Initialize MediaPipe
 cap = cv2.VideoCapture(0)

@@ -6,27 +6,29 @@ import time
 import os
 import signal
 import subprocess
+from gemini_helper import ask_gemini
 
-# Map voice commands to corresponding instrument files
 instrument_scripts = {
-    "flute": "gesture_flute.py",
-    "drums": "gesture_drums.py",
-    "guitar": "gesture_guitar.py",
-    "piano": "gesture_piano.py",
-    "saxophone": "gesture_sax_player.py",
-    "violin": "gesture_violin.py"
+    "flute": os.path.join("scripts", "gesture_flute.py"),
+    "drums": os.path.join("scripts", "gesture_drums.py"),
+    "guitar": os.path.join("scripts", "gesture_guitar.py"),
+    "piano": os.path.join("scripts", "gesture_piano.py"),
+    "saxophone": os.path.join("scripts", "gesture_sax_player.py"),
+    "violin": os.path.join("scripts", "gesture_violin.py"),
 }
 
-# OpenCV + MediaPipe setup
+# 🎥 Webcam & MediaPipe setup
 cap = cv2.VideoCapture(0)
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(min_detection_confidence=0.7, max_num_hands=2)
 mp_draw = mp.solutions.drawing_utils
 
-# Global state
+# 🌍 Global state
 current_instrument = None
 current_process = None
 last_finger_count = -1
+gemini_mode = "create"
+gemini_response = ""  # 👁️ Show Gemini output on video
 
 def initialize_camera():
     if not cap.isOpened():
@@ -34,14 +36,35 @@ def initialize_camera():
         exit()
 
 def listen_for_command():
+    global gemini_mode, gemini_response
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        print("🎙️ Say an instrument name (e.g., 'flute', 'drums', 'exit')")
+        print("🎙️ Say an instrument name or command (e.g., 'flute', 'guide me', 'exit')")
         try:
             audio = recognizer.listen(source, timeout=5)
             command = recognizer.recognize_google(audio).lower()
             print(f"🗣️ Heard: {command}")
+
+            if "enter teach mode" in command:
+                gemini_mode = "teach"
+                gemini_response = "📘 Gemini is now in TEACHING mode."
+                print(gemini_response)
+                return None
+
+            elif "enter create mode" in command:
+                gemini_mode = "create"
+                gemini_response = "🎨 Gemini is now in CREATION mode."
+                print(gemini_response)
+                return None
+
+            elif "guide me" in command or "gemini" in command:
+                response = ask_gemini("Guide me to make something cool!", gemini_mode)
+                print("🧠 Gemini says:\n", response)
+                gemini_response = response
+                return None
+
             return command
+
         except sr.UnknownValueError:
             print("❓ Could not understand audio.")
         except sr.RequestError:
@@ -91,18 +114,26 @@ def process_gestures():
         success, img = cap.read()
         if not success:
             continue
-        img = cv2.flip(img, 1)  # 🔁 Flip image to fix mirror effect
+        img = cv2.flip(img, 1)  # Mirror correction
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         result = hands.process(img_rgb)
         if result.multi_hand_landmarks:
             for hand_landmarks in result.multi_hand_landmarks:
                 mp_draw.draw_landmarks(img, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+
+        # 🧠 Display Gemini text on webcam window
+        if gemini_response:
+            y0 = 30
+            for i, line in enumerate(gemini_response.split('\n')):
+                y = y0 + i * 30
+                cv2.putText(img, line, (10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
         cv2.imshow("Gesture Controller", img)
         if cv2.waitKey(1) & 0xFF == 27:  # ESC to quit
             break
+
     cap.release()
     cv2.destroyAllWindows()
-
 
 def main():
     initialize_camera()
