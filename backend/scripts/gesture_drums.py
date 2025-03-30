@@ -74,15 +74,15 @@ while True:
     else:
         last_drum = -1
 
-    # UI
-    cv2.putText(frame, f"Drum: {drum_name}", (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+    # # UI
+    # cv2.putText(frame, f"Drum: {drum_name}", (10, 30),
+    #             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
 
-    cv2.imshow("Gesture MIDI Drums", frame)
+    # cv2.imshow("Gesture MIDI Drums", frame)
 
-    if cv2.waitKey(1) & 0xFF == 27:
-        break
+    # if cv2.waitKey(1) & 0xFF == 27:
+    #     break
 
-fs.delete()
-cap.release()
-cv2.destroyAllWindows()
+# fs.delete()
+# cap.release()
+# cv2.destroyAllWindows()

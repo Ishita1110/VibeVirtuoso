@@ -88,7 +88,7 @@ while running:
     if cv2.waitKey(1) & 0xFF == 27:
         running = False
 
-# 🧹 Cleanup
-flute.delete()
-cap.release()
-cv2.destroyAllWindows()
+# # 🧹 Cleanup
+# flute.delete()
+# cap.release()
+# cv2.destroyAllWindows()

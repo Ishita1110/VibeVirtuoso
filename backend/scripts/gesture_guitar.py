@@ -87,25 +87,25 @@ while running:
             guitar.strum(last_chosen_note)
             last_strum_time = now
 
-    # 🎨 UI
-    cv2.putText(frame, "Mode: Guitar", (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+    # # 🎨 UI
+    # cv2.putText(frame, "Mode: Guitar", (10, 30),
+    #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
-    if last_chosen_note:
-        cv2.putText(frame, f"Note: {last_chosen_note}", (10, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (200, 255, 200), 2)
+    # if last_chosen_note:
+    #     cv2.putText(frame, f"Note: {last_chosen_note}", (10, 60),
+    #                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (200, 255, 200), 2)
 
-    # 🎯 Draw strum zone
-    cv2.rectangle(frame, (0, int(2 * h / 3)), (w, h), (50, 50, 50), 2)
-    cv2.putText(frame, "STRUM ZONE", (10, h - 20),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 100), 2)
+    # # 🎯 Draw strum zone
+    # cv2.rectangle(frame, (0, int(2 * h / 3)), (w, h), (50, 50, 50), 2)
+    # cv2.putText(frame, "STRUM ZONE", (10, h - 20),
+    #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 100), 2)
 
-    cv2.imshow("Guitar", frame)
+    # cv2.imshow("Guitar", frame)
 
-    if cv2.waitKey(1) & 0xFF == 27:
-        running = False
+    # if cv2.waitKey(1) & 0xFF == 27:
+    #     running = False
 
-# 🧹 Cleanup
-guitar.delete()
-cap.release()
-cv2.destroyAllWindows()
+# # 🧹 Cleanup
+# guitar.delete()
+# cap.release()
+# cv2.destroyAllWindows()
