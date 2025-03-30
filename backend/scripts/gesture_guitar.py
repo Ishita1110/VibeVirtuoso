@@ -1,5 +1,6 @@
 import os
 os.environ["SDL_AUDIODRIVER"] = "coreaudio"
+import pygame
 
 import cv2
 import mediapipe as mp
@@ -86,7 +87,9 @@ while running:
             print("💥 STRUM zone entered!")
             guitar.strum(last_chosen_note)
             last_strum_time = now
-
+    
+cv2.destroyAllWindows()
+exit(0)
     # # 🎨 UI
     # cv2.putText(frame, "Mode: Guitar", (10, 30),
     #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)

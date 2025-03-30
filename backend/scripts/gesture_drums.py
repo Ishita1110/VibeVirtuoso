@@ -74,6 +74,10 @@ while True:
     else:
         last_drum = -1
 
+cv2.destroyAllWindows()
+exit(0)
+
+
     # # UI
     # cv2.putText(frame, f"Drum: {drum_name}", (10, 30),
     #             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)

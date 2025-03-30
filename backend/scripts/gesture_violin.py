@@ -1,5 +1,6 @@
 import os
 os.environ["SDL_AUDIODRIVER"] = "coreaudio"
+import pygame
 
 import cv2
 import mediapipe as mp
@@ -86,7 +87,8 @@ while running:
     else:
         violin.stop()
         last_note_played = -1
-
+cv2.destroyAllWindows()
+exit(0)
     # cv2.putText(frame, "Mode: Violin", (10, 30),
     #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
     # cv2.imshow("Violin Mode", frame)
