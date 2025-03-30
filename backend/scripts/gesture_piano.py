@@ -144,21 +144,21 @@ while True:
         stop_synth()
         last_synth_fingers = -1
 
-    # UI
-    cv2.putText(frame, "Right: Piano 🎹 | Left: Strings 🎻", (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+    # # UI
+    # cv2.putText(frame, "Right: Piano 🎹 | Left: Strings 🎻", (10, 30),
+    #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
-    if current_synth_fingers in SYNTH_CHORDS:
-        cv2.putText(frame, f"Layer: {layer}", (10, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 220, 180), 2)
+    # if current_synth_fingers in SYNTH_CHORDS:
+    #     cv2.putText(frame, f"Layer: {layer}", (10, 60),
+    #                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 220, 180), 2)
 
-    cv2.imshow("Gesture Piano + Strings", frame)
+    # cv2.imshow("Gesture Piano + Strings", frame)
 
-    if cv2.waitKey(1) & 0xFF == 27:
-        break
+    # if cv2.waitKey(1) & 0xFF == 27:
+    #     break
 
-# Cleanup
-piano.delete()
-synth.delete()
-cap.release()
-cv2.destroyAllWindows()
+# # Cleanup
+# piano.delete()
+# synth.delete()
+# cap.release()
+# cv2.destroyAllWindows()
