@@ -1,33 +1,28 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { AudioWaveformIcon as Waveform, Moon, Sun } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { AudioWaveformIcon as Waveform, Moon, Sun, ArrowLeft, Music } from "lucide-react"
+import { getAuthState, clearAuthState } from "@/lib/auth"
 
-export default function RegisterPage() {
+// Mock user data
+const mockUser = {
+  name: "Alex Johnson",
+  email: "alex@example.com",
+}
+
+export default function CreatePage() {
   const router = useRouter()
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
   const [isDarkMode, setIsDarkMode] = useState(false)
 
   // Initialize dark mode based on user preference
   useEffect(() => {
-    // Check if user prefers dark mode
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
     setIsDarkMode(prefersDark)
 
-    // Apply dark mode class if needed
     if (prefersDark && typeof document !== "undefined") {
       document.documentElement.classList.add("dark")
     }
@@ -41,27 +36,32 @@ export default function RegisterPage() {
     }
   }
 
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-
-    // Basic validation
-    if (password !== confirmPassword) {
-      setError("Passwords don't match")
-      return
+  // Check if user is authenticated
+  useEffect(() => {
+    if (!getAuthState()) {
+      router.push("/signin")
     }
+  }, [router])
 
-    setIsLoading(true)
-
-    // Simulate registration delay
-    setTimeout(() => {
-      // In a real app, you would create the user account here
-      setIsLoading(false)
-
-      // Redirect to home page after successful registration
-      router.push("/")
-    }, 1500)
+  const handleLogout = () => {
+    clearAuthState()
+    router.push("/signin")
   }
+
+  // Template options for new compositions
+  const templates = [
+    {
+      id: "1",
+      title: "Electronic Beat",
+      description: "Start with a modern electronic beat template",
+      icon: "electronic",
+    },
+    { id: "2", title: "Jazz Ensemble", description: "Begin with a jazz ensemble arrangement", icon: "jazz" },
+    { id: "3", title: "Acoustic Guitar", description: "Simple acoustic guitar backing track", icon: "acoustic" },
+    { id: "4", title: "Hip Hop Beat", description: "Urban hip hop beat with drums and bass", icon: "hiphop" },
+    { id: "5", title: "Classical Piano", description: "Solo piano composition template", icon: "classical" },
+    { id: "6", title: "Blank Canvas", description: "Start from scratch with an empty project", icon: "blank" },
+  ]
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
@@ -76,12 +76,19 @@ export default function RegisterPage() {
             <Link href="/" className="text-sm font-medium hover:text-purple-200 transition-colors">
               Home
             </Link>
+            <Link href="/dashboard" className="text-sm font-medium hover:text-purple-200 transition-colors">
+              Dashboard
+            </Link>
             <Link href="/music" className="text-sm font-medium hover:text-purple-200 transition-colors">
               Explore
             </Link>
-            <Link href="/signin" className="text-sm font-medium hover:text-purple-200 transition-colors">
-              Sign In
-            </Link>
+            <Button
+              variant="ghost"
+              className="text-sm font-medium text-white hover:text-purple-200 transition-colors"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -94,88 +101,57 @@ export default function RegisterPage() {
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-4 md:p-8">
-        <Card className="w-full max-w-md border-0 shadow-xl bg-white/90 backdrop-blur-sm dark:bg-gray-900/90">
-          <form onSubmit={handleRegister}>
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold text-center text-purple-800 dark:text-purple-400">
-                Create an Account
-              </CardTitle>
-              <CardDescription className="text-center">Join SoundCraft to start creating music</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {error && (
-                <div className="p-3 bg-red-100 border border-red-200 text-red-600 text-sm rounded-md dark:bg-red-900/30 dark:border-red-800 dark:text-red-400">
-                  {error}
-                </div>
-              )}
+      <main className="flex-1 container mx-auto px-4 py-8">
+        {/* Back button */}
+        <Button
+          variant="ghost"
+          className="mb-6 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+          onClick={() => router.push("/dashboard")}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Button>
 
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
+        {/* Page Title */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create New Composition</h1>
+          <p className="text-gray-600 dark:text-gray-300 mt-2">
+            Choose a template to get started or begin with a blank canvas.
+          </p>
+        </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+        {/* Template Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {templates.map((template) => {
+            // Define background colors based on template type
+            const bgColors: Record<string, string> = {
+              electronic: "from-blue-400 to-purple-500",
+              jazz: "from-amber-400 to-orange-500",
+              acoustic: "from-green-400 to-emerald-500",
+              hiphop: "from-red-400 to-pink-500",
+              classical: "from-indigo-400 to-violet-500",
+              blank: "from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700",
+            }
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
+            const bgColor = bgColors[template.icon] || bgColors.blank
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-                disabled={isLoading}
+            return (
+              <Card
+                key={template.id}
+                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => router.push(`/editor?template=${template.id}`)}
               >
-                {isLoading ? "Creating Account..." : "Register"}
-              </Button>
-              <div className="text-center text-sm">
-                Already have an account?{" "}
-                <Link
-                  href="/signin"
-                  className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
-                >
-                  Sign In
-                </Link>
-              </div>
-            </CardFooter>
-          </form>
-        </Card>
+                <div className={`h-32 bg-gradient-to-br ${bgColor} flex items-center justify-center`}>
+                  <Music className="h-12 w-12 text-white opacity-75" />
+                </div>
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">{template.title}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{template.description}</p>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
       </main>
 
       {/* Footer */}
@@ -190,11 +166,11 @@ export default function RegisterPage() {
               <Link href="/" className="text-sm hover:text-white">
                 Home
               </Link>
+              <Link href="/dashboard" className="text-sm hover:text-white">
+                Dashboard
+              </Link>
               <Link href="/music" className="text-sm hover:text-white">
                 Explore
-              </Link>
-              <Link href="/signin" className="text-sm hover:text-white">
-                Sign In
               </Link>
               <Link href="#" className="text-sm hover:text-white">
                 Contact
