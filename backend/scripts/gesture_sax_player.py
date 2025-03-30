@@ -1,4 +1,6 @@
 import os
+import pygame
+
 os.environ["SDL_AUDIODRIVER"] = "coreaudio"
 
 import cv2

@@ -80,13 +80,13 @@ while running:
         flute.stop()
         last_note_played = -1
 
-    # UI
-    cv2.putText(frame, "Mode: Flute (High Octave)", (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-    cv2.imshow("Flute Mode", frame)
+    # # UI
+    # cv2.putText(frame, "Mode: Flute (High Octave)", (10, 30),
+    #             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+    # cv2.imshow("Flute Mode", frame)
 
-    if cv2.waitKey(1) & 0xFF == 27:
-        running = False
+    # if cv2.waitKey(1) & 0xFF == 27:
+    #     running = False
 
 # # 🧹 Cleanup
 # flute.delete()

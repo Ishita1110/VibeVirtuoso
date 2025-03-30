@@ -1,4 +1,5 @@
 import fluidsynth
+import pygame
 
 class PianoSynth:
     def __init__(self, sf2_path="../sounds/FluidR3_GM.sf2", program=0):  # Acoustic Grand Piano

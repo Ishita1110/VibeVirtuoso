@@ -1,5 +1,6 @@
 import os
 os.environ["SDL_AUDIODRIVER"] = "coreaudio"
+import pygame
 
 import cv2
 import mediapipe as mp
