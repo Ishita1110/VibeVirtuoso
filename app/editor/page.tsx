@@ -2,14 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   AudioWaveformIcon as Waveform,
-  Moon,
-  Sun,
   ArrowLeft,
   Play,
   Pause,
@@ -30,10 +27,10 @@ import {
   Mic,
   Music,
   Settings,
-  HelpCircle,
   Info,
+  Maximize,
 } from "lucide-react"
-import { getAuthState, clearAuthState } from "@/lib/auth"
+import { getAuthState } from "@/lib/auth"
 
 // Mock user data
 const mockUser = {
@@ -88,16 +85,6 @@ const mockTracks = [
   },
 ]
 
-// Recognized gestures
-const recognizedGestures = [
-  { name: "Volume Up", description: "Raise right hand" },
-  { name: "Volume Down", description: "Lower right hand" },
-  { name: "Tempo Up", description: "Speed up hand movement" },
-  { name: "Tempo Down", description: "Slow down hand movement" },
-  { name: "Change Instrument", description: "Switch hand position" },
-  { name: "Record", description: "Hold both hands up" },
-]
-
 export default function EditorPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -113,13 +100,15 @@ export default function EditorPage() {
   const [selectedClip, setSelectedClip] = useState<number | null>(null)
   const [isCameraActive, setIsCameraActive] = useState(true)
   const [isGestureRecognitionActive, setIsGestureRecognitionActive] = useState(true)
-  const [showGestureGuide, setShowGestureGuide] = useState(true)
+  const [showGestureGuide, setShowGestureGuide] = useState(false) // Set to false to hide gesture guide
   const [activeGesture, setActiveGesture] = useState<string | null>(null)
   const [isOpenCVLoaded, setIsOpenCVLoaded] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const timelineRef = useRef<HTMLDivElement>(null)
+  const editorRef = useRef<HTMLDivElement>(null)
 
   // Timeline settings
   const secondWidth = 40 * zoomLevel // pixels per second
@@ -230,23 +219,6 @@ export default function EditorPage() {
     return () => clearInterval(interval)
   }, [isPlaying, totalDuration])
 
-  // Simulate random gesture recognition
-  useEffect(() => {
-    if (isGestureRecognitionActive && isCameraActive) {
-      const interval = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * recognizedGestures.length)
-        setActiveGesture(recognizedGestures[randomIndex].name)
-
-        // Clear the active gesture after a short delay
-        setTimeout(() => {
-          setActiveGesture(null)
-        }, 2000)
-      }, 5000)
-
-      return () => clearInterval(interval)
-    }
-  }, [isGestureRecognitionActive, isCameraActive])
-
   // Toggle dark mode
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode)
@@ -255,10 +227,17 @@ export default function EditorPage() {
     }
   }
 
-  // Handle logout
-  const handleLogout = () => {
-    clearAuthState()
-    router.push("/signin")
+  // Toggle fullscreen
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      editorRef.current?.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`)
+      })
+      setIsFullscreen(true)
+    } else {
+      document.exitFullscreen()
+      setIsFullscreen(false)
+    }
   }
 
   // Toggle play/pause
@@ -305,39 +284,35 @@ export default function EditorPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-b from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 overflow-hidden">
-      {/* Navigation Ribbon */}
+    <div
+      ref={editorRef}
+      className="flex flex-col h-screen bg-gradient-to-b from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 overflow-hidden"
+    >
+      {/* Simplified Header */}
       <header className="sticky top-0 z-50 w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-2">
-              <Waveform className="h-6 w-6" />
-              <span className="font-bold text-xl">SoundCraft</span>
-            </Link>
-            {/* Back button */}
+          <div className="flex items-center gap-4">
+            {/* Back to Dashboard */}
             <Button
               variant="ghost"
-              className="mb-6 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              className="text-white hover:bg-white/10 flex items-center gap-2"
               onClick={() => router.push("/dashboard")}
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              <ArrowLeft className="h-5 w-5" />
+              <span>Back to Dashboard</span>
             </Button>
 
-            {/* Page Title */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                {isEditing ? "Edit Composition" : "Create New Composition"}
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2">
-                {isEditing
-                  ? "Make changes to your existing composition"
-                  : "Create your music using gestures and the timeline editor"}
-              </p>
+            <div className="h-6 w-px bg-white/20 mx-2"></div>
+
+            {/* Title */}
+            <div className="flex items-center gap-2">
+              <Waveform className="h-6 w-6" />
+              <span className="font-bold text-xl">{isEditing ? "Edit Composition" : "Create New Composition"}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Save */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -351,6 +326,7 @@ export default function EditorPage() {
               </Tooltip>
             </TooltipProvider>
 
+            {/* Download */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -364,6 +340,7 @@ export default function EditorPage() {
               </Tooltip>
             </TooltipProvider>
 
+            {/* Undo */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -377,6 +354,7 @@ export default function EditorPage() {
               </Tooltip>
             </TooltipProvider>
 
+            {/* Redo */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -390,24 +368,24 @@ export default function EditorPage() {
               </Tooltip>
             </TooltipProvider>
 
-            <div className="h-6 w-px bg-white/20 mx-2"></div>
-
-            <Button
-              variant="ghost"
-              className="text-sm font-medium text-white hover:text-purple-200 transition-colors"
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleDarkMode}
-              className="text-white hover:bg-white/10 rounded-full h-8 w-8"
-            >
-              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
+            {/* Fullscreen */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/10"
+                    onClick={toggleFullscreen}
+                  >
+                    <Maximize className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Toggle Fullscreen</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       </header>
@@ -423,13 +401,6 @@ export default function EditorPage() {
               {/* Gesture Recognition Overlay */}
               <div className="absolute inset-0 pointer-events-none">
                 <canvas ref={canvasRef} className="w-full h-full" />
-                {/* 
-                  This canvas is where OpenCV will render its output.
-                  Your OpenCV code can:
-                  1. Access the video feed via videoRef.current
-                  2. Draw gesture recognition visualization on canvasRef.current
-                  3. Call setActiveGesture() when gestures are detected
-                */}
 
                 {/* Active Gesture Indicator */}
                 {activeGesture && (
@@ -438,31 +409,6 @@ export default function EditorPage() {
                       <Hand className="h-5 w-5" />
                       <span>{activeGesture} detected</span>
                     </div>
-                  </div>
-                )}
-
-                {/* Gesture Guide */}
-                {showGestureGuide && (
-                  <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm p-3 rounded-lg text-white max-w-xs">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium">Gesture Guide</h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 text-white hover:bg-white/10"
-                        onClick={() => setShowGestureGuide(false)}
-                      >
-                        ×
-                      </Button>
-                    </div>
-                    <ul className="text-xs space-y-1">
-                      {recognizedGestures.map((gesture, index) => (
-                        <li key={index} className="flex items-center gap-2">
-                          <span className="w-24 font-medium">{gesture.name}:</span>
-                          <span>{gesture.description}</span>
-                        </li>
-                      ))}
-                    </ul>
                   </div>
                 )}
               </div>
@@ -532,26 +478,6 @@ export default function EditorPage() {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-
-                {!showGestureGuide && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="bg-black/50 backdrop-blur-sm text-white hover:bg-black/70 rounded-full"
-                          onClick={() => setShowGestureGuide(true)}
-                        >
-                          <HelpCircle className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Show Gesture Guide</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
               </div>
             </>
           ) : (
