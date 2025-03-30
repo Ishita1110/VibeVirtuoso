@@ -1,129 +1,62 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { AudioWaveformIcon as Waveform, Music, Moon, Sun, Play } from "lucide-react"
+import { AudioWaveformIcon as Waveform, Moon, Sun, Music, Play } from "lucide-react"
+import { getAuthState } from "@/lib/auth"
 
-export default function HomePage() {
+// Mock authentication check - in a real app, this would check your auth state
+const isAuthenticated = () => {
+  return getAuthState()
+}
+
+export default function LandingPage() {
+  const router = useRouter()
   const [isDarkMode, setIsDarkMode] = useState(false)
-  const waveCanvasRef = useRef<HTMLCanvasElement>(null)
-  const animationRef = useRef<number>()
+  const [loading, setLoading] = useState(true)
 
   // Initialize dark mode based on user preference
   useEffect(() => {
-    // Check if user prefers dark mode
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
     setIsDarkMode(prefersDark)
 
-    // Apply dark mode class if needed
-    if (prefersDark) {
+    if (prefersDark && typeof document !== "undefined") {
       document.documentElement.classList.add("dark")
     }
   }, [])
 
+  // Check authentication and redirect if needed
+  useEffect(() => {
+    // Simulate checking auth status
+    setTimeout(() => {
+      if (isAuthenticated()) {
+        router.push("/dashboard")
+      } else {
+        setLoading(false)
+      }
+    }, 500)
+  }, [router])
+
   // Toggle dark mode
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode)
-    document.documentElement.classList.toggle("dark")
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark")
+    }
   }
 
-  // Smooth sound wave animation
-  useEffect(() => {
-    const canvas = waveCanvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
-    const dpr = window.devicePixelRatio || 1
-    const rect = canvas.getBoundingClientRect()
-
-    canvas.width = rect.width * dpr
-    canvas.height = rect.height * dpr
-
-    ctx.scale(dpr, dpr)
-
-    let phase = 0
-
-    const drawSmoothWaves = () => {
-      ctx.clearRect(0, 0, rect.width, rect.height)
-
-      // Create gradient
-      const gradient = ctx.createLinearGradient(0, 0, rect.width, 0)
-      gradient.addColorStop(0, "#f472b6") // pink-400
-      gradient.addColorStop(0.5, "#a855f7") // purple-500
-      gradient.addColorStop(1, "#6366f1") // indigo-500
-
-      const centerY = rect.height / 2
-
-      // Draw the center line
-      ctx.beginPath()
-      ctx.moveTo(0, centerY)
-      ctx.lineTo(rect.width, centerY)
-      ctx.strokeStyle = isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
-      ctx.stroke()
-
-      // Draw the primary smooth wave (top)
-      ctx.beginPath()
-      ctx.moveTo(0, centerY)
-
-      // Parameters for wave complexity
-      const frequency1 = 0.02
-      const frequency2 = 0.01
-      const frequency3 = 0.005
-
-      const amplitude1 = rect.height * 0.15
-      const amplitude2 = rect.height * 0.1
-      const amplitude3 = rect.height * 0.05
-
-      for (let x = 0; x <= rect.width; x += 1) {
-        // Combine multiple sine waves for a more interesting but still smooth pattern
-        const y1 = Math.sin(x * frequency1 + phase) * amplitude1
-        const y2 = Math.sin(x * frequency2 + phase * 0.7) * amplitude2
-        const y3 = Math.sin(x * frequency3 + phase * 1.3) * amplitude3
-
-        const y = centerY - (y1 + y2 + y3) // Negative to go above center line
-
-        ctx.lineTo(x, y)
-      }
-
-      ctx.strokeStyle = gradient
-      ctx.lineWidth = 3
-      ctx.stroke()
-
-      // Draw the mirrored smooth wave (bottom)
-      ctx.beginPath()
-      ctx.moveTo(0, centerY)
-
-      for (let x = 0; x <= rect.width; x += 1) {
-        // Same waves but inverted to go below center line
-        const y1 = Math.sin(x * frequency1 + phase) * amplitude1
-        const y2 = Math.sin(x * frequency2 + phase * 0.7) * amplitude2
-        const y3 = Math.sin(x * frequency3 + phase * 1.3) * amplitude3
-
-        const y = centerY + (y1 + y2 + y3) // Positive to go below center line
-
-        ctx.lineTo(x, y)
-      }
-
-      ctx.strokeStyle = "rgba(164, 94, 229, 0.5)" // Semi-transparent purple
-      ctx.lineWidth = 3
-      ctx.stroke()
-
-      // Update phase for animation
-      phase += 0.03
-      animationRef.current = requestAnimationFrame(drawSmoothWaves)
-    }
-
-    drawSmoothWaves()
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
-    }
-  }, [isDarkMode])
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+        <div className="animate-pulse flex flex-col items-center">
+          <Waveform className="h-12 w-12 text-purple-600 dark:text-purple-400" />
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
@@ -139,7 +72,7 @@ export default function HomePage() {
               Home
             </Link>
             <Link href="/music" className="text-sm font-medium hover:text-purple-200 transition-colors">
-              Music
+              Explore
             </Link>
             <Link href="/signin" className="text-sm font-medium hover:text-purple-200 transition-colors">
               Sign In
@@ -162,7 +95,7 @@ export default function HomePage() {
           <div className="container px-4 md:px-6 mx-auto text-center">
             <div className="max-w-3xl mx-auto space-y-8">
               <div className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm backdrop-blur-sm">
-                <span className="font-medium">Hackathon Project 2025</span>
+                <span className="font-medium">Music Creation Platform</span>
               </div>
 
               <div className="space-y-4">
@@ -175,7 +108,11 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="bg-white text-purple-700 hover:bg-purple-100 px-8 text-lg font-bold">
+                <Button
+                  size="lg"
+                  className="bg-white text-purple-700 hover:bg-purple-100 px-8 text-lg font-bold"
+                  onClick={() => router.push("/signin")}
+                >
                   Start Making Music
                 </Button>
               </div>
@@ -183,19 +120,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Smooth Sound Wave Visualization */}
-        <section className="w-full py-12 md:py-16 bg-white dark:bg-gray-950 transition-colors duration-300">
-          <div className="container px-4 md:px-6 mx-auto">
-            <div className="flex justify-center">
-              <div className="w-full max-w-3xl h-32 md:h-40 relative rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
-                <canvas ref={waveCanvasRef} className="w-full h-full" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Features Section - Minimalistic */}
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
+        {/* Features Section */}
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-white dark:bg-gray-900 transition-colors duration-300">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl text-purple-800 dark:text-purple-400">
@@ -249,8 +175,12 @@ export default function HomePage() {
                 Jump right in and start creating your own musical masterpieces with SoundCraft.
               </p>
               <div>
-                <Button size="lg" className="bg-white text-purple-700 hover:bg-purple-100 px-8 text-lg font-bold">
-                  Start Making Music
+                <Button
+                  size="lg"
+                  className="bg-white text-purple-700 hover:bg-purple-100 px-8 text-lg font-bold"
+                  onClick={() => router.push("/signin")}
+                >
+                  Sign In to Get Started
                 </Button>
               </div>
               <p className="text-sm text-white/70">No musical experience required. Just bring your creativity!</p>
@@ -272,7 +202,7 @@ export default function HomePage() {
                 Home
               </Link>
               <Link href="/music" className="text-sm hover:text-white">
-                Music
+                Explore
               </Link>
               <Link href="/signin" className="text-sm hover:text-white">
                 Sign In
@@ -286,7 +216,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="mt-6 border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-500">© 2025 SoundCraft. All rights reserved. Created for Hackathon 2025.</p>
+            <p className="text-sm text-gray-500">© 2025 SoundCraft. All rights reserved.</p>
             <div className="flex items-center gap-4 mt-4 md:mt-0">
               <Link href="#" className="text-gray-500 hover:text-white">
                 <span className="sr-only">Twitter</span>
