@@ -1,6 +1,7 @@
 # sax_synth.py
 
 import fluidsynth
+import pygame
 
 class SaxSynth:
     def __init__(self, sf2_path="../sounds/FluidR3_GM.sf2"):
