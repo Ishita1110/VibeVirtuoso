@@ -378,7 +378,7 @@ export default function PreviewPage() {
       {/* Footer */}
       <footer className="w-full py-4 bg-gray-900 text-gray-300">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-sm text-gray-500">© 2025 SoundCraft. All rights reserved.</p>
+          <p className="text-sm text-gray-500"> VibeVirtuoso. All rights reserved.</p>
         </div>
       </footer>
 

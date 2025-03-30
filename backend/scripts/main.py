@@ -7,12 +7,11 @@ import os
 import signal
 import subprocess
 import uuid
+import random
 from datetime import datetime
 from pymongo import MongoClient
-from gemini_helper import ask_gemini
 from dotenv import load_dotenv
 load_dotenv()
-
 
 instrument_scripts = {
     "flute": os.path.join("scripts", "gesture_flute.py"),
@@ -97,9 +96,40 @@ def listen_for_command():
                 print(gemini_response)
                 return None
             elif "guide me" in command or "gemini" in command:
-                response = ask_gemini("Guide me to make something cool!", gemini_mode)
+                suggestions = {
+                    "flute": [
+                        "🎵 Try starting with C Major and sliding into E minor.",
+                        "🎶 Use long sustained notes on D and A for emotional build-up."
+                    ],
+                    "drums": [
+                        "🥁 Begin with a 4/4 kick-snare pattern, and throw in triplets on the hi-hat!",
+                        "🔥 Layer kick on beats 1 and 3, snare on 2 and 4 — classic groove!"
+                    ],
+                    "guitar": [
+                        "🎸 Try an arpeggio of C – G – Am – F for a chill vibe.",
+                        "🎶 Use palm muting on the E string while alternating with G chord plucks."
+                    ],
+                    "piano": [
+                        "🎹 Try a progression like F – Am – Dm – Bb in a broken chord pattern.",
+                        "🎼 Left hand plays root, right hand plays 7th chords — jazzy!"
+                    ],
+                    "saxophone": [
+                        "🎷 Glide through notes B♭ – C – D with vibrato on the end note.",
+                        "🎶 Improvise on the blues scale in G for a classic feel."
+                    ],
+                    "violin": [
+                        "🎻 Use staccato bowing on G – B – D for a bouncing effect.",
+                        "🎼 Try legato transitions between A – E – F♯ for a smooth phrase."
+                    ]
+                }
+
+                if current_instrument in suggestions:
+                    response = random.choice(suggestions[current_instrument])
+                else:
+                    response = "🎧 Explore creative combinations of rhythm and melody!"
+
                 print("🧠 Gemini says:\n", response)
-                gemini_response = response
+                gemini_response = f"Instrument: {current_instrument.capitalize()}\n{response}"
                 return None
 
             return command
@@ -174,6 +204,12 @@ def process_gestures():
             for i, line in enumerate(gemini_response.split('\n')):
                 y = y0 + i * 30
                 cv2.putText(img, line, (10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+        if current_instrument:
+            cv2.putText(
+                img, f"🎹 Instrument: {current_instrument.upper()}",
+                (10, img.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2
+            )
 
         cv2.imshow("Gesture Controller", img)
         if cv2.waitKey(1) & 0xFF == 27:

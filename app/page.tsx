@@ -79,7 +79,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Waveform className="h-6 w-6" />
-            <span className="font-bold text-xl">SoundCraft</span>
+            <span className="font-bold text-xl">VibeVirtuoso</span>
           </Link>
           <nav className="flex gap-8 items-center">
             <Link href="/" className="text-sm font-medium text-purple-200 border-b-2 border-purple-200">
@@ -149,7 +149,7 @@ export default function LandingPage() {
 
               <div className="space-y-4">
                 <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-                  SoundCraft: Interactive Music Creation
+                VibeVirtuoso: Interactive Music Creation
                 </h1>
                 <p className="mx-auto max-w-[700px] text-xl md:text-2xl text-white/80">
                   {isAuthenticated
@@ -226,8 +226,8 @@ export default function LandingPage() {
               </h2>
               <p className="mx-auto max-w-[700px] text-xl text-white/80">
                 {isAuthenticated
-                  ? "Jump back into your projects or start something new with SoundCraft."
-                  : "Jump right in and start creating your own musical masterpieces with SoundCraft."}
+                  ? "Jump back into your projects or start something new with VibeVirtuoso."
+                  : "Jump right in and start creating your own musical masterpieces with VibeVirtuoso."}
               </p>
               <div>
                 <Button
@@ -250,7 +250,7 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
               <Waveform className="h-6 w-6" />
-              <span className="font-bold">SoundCraft</span>
+              <span className="font-bold">VibeVirtuoso</span>
             </div>
             <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
               <Link href="/" className="text-sm hover:text-white">
@@ -277,7 +277,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="mt-6 border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-500">© 2025 SoundCraft. All rights reserved.</p>
+            <p className="text-sm text-gray-500"> VibeVirtuoso. All rights reserved.</p>
             <div className="flex items-center gap-4 mt-4 md:mt-0">
               <Link href="#" className="text-gray-500 hover:text-white">
                 <span className="sr-only">Twitter</span>

@@ -1,99 +1,128 @@
-"use client"
+from fastapi import FastAPI, UploadFile, File
+from pydantic import BaseModel
+from datetime import datetime
+from dotenv import load_dotenv
+from scripts.gesture_control import handle_gesture
+import subprocess
+import os
+import signal
+import uvicorn
+import json
+from pathlib import Path
+from fastapi.middleware.cors import CORSMiddleware
+import base64
+import requests
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import {
-  AudioWaveformIcon as Waveform,
-  ArrowLeft,
-  Save,
-  Download,
-  Undo,
-  Redo,
-  Settings,
-  Info,
-} from "lucide-react"
-import { getAuthState } from "@/lib/auth"
+load_dotenv()
 
-export default function EditorPage() {
-  const router = useRouter()
-  const [isDarkMode, setIsDarkMode] = useState(false)
+app = FastAPI()
 
-  // Initialize dark mode based on user preference
-  useEffect(() => {
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-    setIsDarkMode(prefersDark)
-    if (prefersDark && typeof document !== "undefined") {
-      document.documentElement.classList.add("dark")
+# Enable CORS for frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+RECORDINGS_FILE = Path("recordings/recordings.json")
+RECORDINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
+if not RECORDINGS_FILE.exists():
+    RECORDINGS_FILE.write_text("[]")
+
+class Trigger(BaseModel):
+    gesture: str
+    instrument: str
+
+@app.post("/play")
+def play_sound(trigger: Trigger):
+    result = handle_gesture(trigger.gesture, trigger.instrument)
+
+    entry = {
+        "gesture": trigger.gesture,
+        "instrument": trigger.instrument,
+        "timestamp": datetime.utcnow().isoformat()
     }
-  }, [])
 
-  // Check if user is authenticated
-  useEffect(() => {
-    if (!getAuthState()) {
-      router.push("/signin")
+    with RECORDINGS_FILE.open("r+") as f:
+        data = json.load(f)
+        data.append(entry)
+        f.seek(0)
+        json.dump(data, f, indent=2)
+
+    return {**entry, "status": "ok", "played": result}
+
+@app.get("/recordings")
+def get_recordings():
+    with RECORDINGS_FILE.open("r") as f:
+        return {"recordings": json.load(f)}
+
+@app.post("/generate-samples")
+def generate_samples(file: UploadFile = File(...)):
+    # Read and encode the uploaded file
+    audio_bytes = file.file.read()
+    audio_base64 = base64.b64encode(audio_bytes).decode("utf-8")
+
+    # Prepare prompt and send to Gemini API
+    api_key = os.getenv("GEMINI_API_KEY")
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
     }
-  }, [router])
+    prompt = {
+        "contents": [
+            {"role": "user", "parts": [
+                {"text": "You are a music producer. Create 4 different music variations of the following audio sample with unique styles: acoustic, electronic, lo-fi, and orchestral."},
+                {"inline_data": {
+                    "mime_type": "audio/wav",
+                    "data": audio_base64
+                }}
+            ]}
+        ]
+    }
 
-  return (
-    <div className="flex flex-col h-screen bg-gradient-to-b from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300 overflow-hidden">
-      {/* Simplified Header */}
-      <header className="sticky top-0 z-50 w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {/* Back to Dashboard */}
-            <Button
-              variant="ghost"
-              className="text-white hover:bg-white/10 flex items-center gap-2"
-              onClick={() => router.push("/dashboard")}
-            >
-              <ArrowLeft className="h-5 w-5" />
-              <span>Back to Dashboard</span>
-            </Button>
+    response = requests.post(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+        headers=headers,
+        json=prompt
+    )
 
-            <div className="h-6 w-px bg-white/20 mx-2"></div>
+    try:
+        result = response.json()
+        return result
+    except Exception as e:
+        return {"error": str(e), "raw_response": response.text}
 
-            {/* Title */}
-            <div className="flex items-center gap-2">
-              <Waveform className="h-6 w-6" />
-              <span className="font-bold text-xl">Your Recordings</span>
-            </div>
-          </div>
+# Store the process globally
+gesture_process = None
 
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
-              <Save className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
-              <Download className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
-              <Undo className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
-              <Redo className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
-              <Settings className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
-              <Info className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </header>
+@app.get("/start-script")
+def start_gesture_script():
+    global gesture_process
 
-      {/* Placeholder for audio visualization */}
-      <div className="flex-1 flex items-center justify-center text-center p-8">
-        <div>
-          <p className="text-2xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
-            🎵 Your gesture-based recordings will appear here!
-          </p>
-          <p className="text-gray-500 dark:text-gray-400">
-            Use voice or gesture to record instruments. Then return here to mix, listen, and export them.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
+    if gesture_process is None or gesture_process.poll() is not None:
+        gesture_process = subprocess.Popen(
+            ["python", "scripts/main.py"],
+            preexec_fn=os.setsid
+        )
+        return {"status": "started"}
+    else:
+        return {"status": "already running"}
+
+@app.get("/stop-script")
+def stop_gesture_script():
+    global gesture_process
+
+    if gesture_process and gesture_process.poll() is None:
+        os.killpg(os.getpgid(gesture_process.pid), signal.SIGTERM)
+        gesture_process = None
+        return {"status": "stopped"}
+    return {"status": "not running"}
+
+@app.get("/")
+def root():
+    return {"message": "🎵 VibeVirtuoso API is running!"}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
