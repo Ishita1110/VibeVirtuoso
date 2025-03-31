@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+opencv-python
+mediapipe
+pyaudio
+SpeechRecognition
+pymongo
+python-dotenv
+google-generativeai
