@@ -1,4 +1,4 @@
-// File: /Users/saatvikpradhan/Documents/GitHub/Finger-Bangers/app/dashboard/page.tsx
+// File: /Users/pradhyumnsinghthakur/VibeVirtuoso/app/dashboard/page.tsx
 import * as entry from '../../../../app/dashboard/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

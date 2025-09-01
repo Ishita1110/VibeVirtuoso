@@ -39,18 +39,46 @@ export default function SignInPage() {
     }
   }
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const [error, setError] = useState("")
+
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
     setIsLoading(true)
 
-    // Simulate authentication delay
-    setTimeout(() => {
-      // In a real app, you would validate credentials here
-      setIsLoading(false)
+    try {
+      // Call the database API to login user
+      const response = await fetch("http://localhost:8001/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: email.split("@")[0], // Use email prefix as username
+          password: password,
+        }),
+      })
 
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Login failed")
+      }
+
+      // Store the JWT token
+      if (typeof window !== "undefined") {
+        localStorage.setItem("auth_token", data.access_token)
+        localStorage.setItem("user_id", data.user_id)
+        localStorage.setItem("username", data.username)
+      }
+
+      setIsLoading(false)
       // Use the handleLogin function to set auth state and redirect
       handleLogin(router)
-    }, 1000)
+    } catch (error) {
+      setIsLoading(false)
+      setError(error instanceof Error ? error.message : "Login failed")
+    }
   }
 
   return (
@@ -96,6 +124,12 @@ export default function SignInPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {error && (
+                <div className="p-3 bg-red-100 border border-red-200 text-red-600 text-sm rounded-md dark:bg-red-900/30 dark:border-red-800 dark:text-red-400">
+                  {error}
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
