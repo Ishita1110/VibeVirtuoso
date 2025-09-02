@@ -1,4 +1,4 @@
-// File: /Users/pradhyumnsinghthakur/VibeVirtuoso/app/music/page.tsx
+// File: /Users/saatvikpradhan/Documents/GitHub/Finger-Bangers/app/music/page.tsx
 import * as entry from '../../../../app/music/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

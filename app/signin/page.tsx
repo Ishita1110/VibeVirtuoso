@@ -46,38 +46,24 @@ export default function SignInPage() {
     setError("")
     setIsLoading(true)
 
-    try {
-      // Call the database API to login user
-      const response = await fetch("http://localhost:8001/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: email.split("@")[0], // Use email prefix as username
-          password: password,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.detail || "Login failed")
-      }
-
-      // Store the JWT token
+    // Simple mock authentication for demo - accept any email/password
+    if (email && password) {
+      // Mock delay to simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // Store mock user data
       if (typeof window !== "undefined") {
-        localStorage.setItem("auth_token", data.access_token)
-        localStorage.setItem("user_id", data.user_id)
-        localStorage.setItem("username", data.username)
+        localStorage.setItem("auth_token", "mock_token_123")
+        localStorage.setItem("user_id", "demo_user")
+        localStorage.setItem("username", email.split("@")[0])
       }
 
       setIsLoading(false)
       // Use the handleLogin function to set auth state and redirect
       handleLogin(router)
-    } catch (error) {
+    } else {
       setIsLoading(false)
-      setError(error instanceof Error ? error.message : "Login failed")
+      setError("Please enter both email and password")
     }
   }
 

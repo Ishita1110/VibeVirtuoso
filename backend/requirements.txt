@@ -9,7 +9,6 @@ pymongo
 dnspython
 motor
 python-dotenv
-google-generativeai
 pydantic
 pydantic-settings
 email-validator
@@ -17,3 +16,5 @@ python-multipart
 python-jose[cryptography]
 passlib[bcrypt]
 bcrypt
+scipy
+numpy
